@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import pickle
 import os
-os.chdir('/Users/beth/Documents/Metis/metis_project_3_files/clinical_trials')
+os.chdir('/Users/beth/Documents/Metis/metis_project_3/metis_project_3')
 
 with open('column_dict.pickle', 'rb') as read_file:
     column_dict = pickle.load(read_file)
@@ -17,7 +17,15 @@ with open('scaling.pickle', 'rb') as read_file:
 with open('average.pickle', 'rb') as read_file:
     df = pickle.load(read_file)
 
-pred = lr.predict_proba(df.reshape(1, -1))[:,1]
+with open('PPV_threholds.pickle', 'rb') as read_file:
+    thresholds = pickle.load(read_file)
+
+with open('PPV.pickle', 'rb') as read_file:
+    PPVs = pickle.load(read_file)
+
+average=df.copy()
+
+pred = lr.predict_proba(df.reshape(1, -1))[:,1][0]
 
 def graph_it(h):
   fig, ax = plt.subplots(figsize=(3,5))
@@ -25,9 +33,9 @@ def graph_it(h):
   ax.set_ylim(0,100)
   ax.set_xticks([])
   ax.set_ylabel('%')
-  ax.axhline(y=12,xmin=0,xmax=1,color='black')
+  ax.axhline(y=45,xmin=0,xmax=1,color='black')
   ax.text(x=0.9, y=h+5, s='{:0.2f} %'.format(h))
-  ax.text(x=1.48, y=11, s='Average Study: 12%')
+  ax.text(x=1.48, y=44, s='Average Study: 45%')
   st.sidebar.pyplot(fig)
 
 st.write('''# Cancer Clinical Trial Feasibility App
@@ -51,18 +59,27 @@ purpose = st.selectbox(
      sorted(['Treatment','Prevention','Supportive Care','Diagnostic']) )
 if purpose != 'Other':
 	df[column_dict[purpose]] = 1
+if purpose == 'Other':
+  for i in ['Treatment','Prevention','Supportive Care','Diagnostic']:
+    df[column_dict[i]] = average[column_dict[i]]
 
 phase = st.selectbox(
     'Phase', ['Other']+
      sorted(['Phase 2','Phase 3','Phase 1/Phase 2','Phase 2/Phase 3']) )
 if phase != 'Other':
 	df[column_dict[phase]] = 1
+if phase == 'Other':
+  for i in ['Phase 2','Phase 3','Phase 1/Phase 2','Phase 2/Phase 3']:
+    df[column_dict[i]] = average[column_dict[i]]
 
 option = st.selectbox(
     'Assignment Strategy',['Other']+
      sorted(['Single Group','Parallel','Crossover','Sequential','Factorial']) )
 if option != 'Other':
 	df[column_dict[option]] = 1
+if option == 'Other':
+  for i in ['Single Group','Parallel','Crossover','Sequential','Factorial']:
+    df[column_dict[i]] = average[column_dict[i]]
 
 left_column, right_column = st.beta_columns(2)
 
@@ -81,10 +98,15 @@ if oversight == True:
 blinded = st.selectbox(
     'Masking Combination',['Other']+
      sorted(['Participant|Care Provider|Investigator|Outcomes Assessor ', \
-     	'Participant|Investigator ','Participant|Care Provider|Investigator',\
+     	'Participant|Investigator','Participant|Care Provider|Investigator',\
      	'Participant','Participant|Investigator|Outcomes Assessor']) )
 if blinded != 'Other':
 	df[column_dict[blinded]] = 1
+if blinded == 'Other':
+  for i in ['Participant|Care Provider|Investigator|Outcomes Assessor ', \
+      'Participant|Investigator','Participant|Care Provider|Investigator',\
+      'Participant','Participant|Investigator|Outcomes Assessor']:
+    df[column_dict[i]] = average[column_dict[i]]
 
 
 condition_tags = sorted(['stage ii', 'stage iii', 'iv', 'breast', 'lymphoma', 'non-hodgkin', 'noncontiguous', 'prostate', \
@@ -110,6 +132,14 @@ arms = st.selectbox(
        'Experimental|No Intervention', 'Active Comparator|Placebo Comparator']))
 if arms != 'Other':
 	df[column_dict[arms]] = 1
+if arms == 'Other':
+  for i in ['Experimental|Active Comparator', 'Experimental',
+       'Experimental|Placebo Comparator', 'Experimental|Experimental',
+       'Active Comparator|Active Comparator',
+       'Experimental|Experimental|Experimental',
+       'Experimental|No Intervention', 'Active Comparator|Placebo Comparator']:
+    df[column_dict[i]] = average[column_dict[i]]
+
 
 num_arms = st.slider('Number of Arms (10 if more than 10)', 1, 10, 1 )
 df[78] = num_arms
@@ -217,6 +247,11 @@ sponsor = st.selectbox(
   'Pfizer','Amgen','European Organisation for Research and Treatment of Cancer - EORTC']) )
 if sponsor != 'Other':
 	df[column_dict[sponsor]] = 1
+if sponsor == 'Other':
+  for i in ['National Cancer Institute (NCI)','M.D. Anderson Cancer Center','Memorial Sloan Kettering Cancer Center', \
+  'Novartis Pharmaceuticals','Eli Lilly and Company', 'Hoffmann-La Roche','Alliance for Clinical Trials in Oncology', \
+  'Pfizer','Amgen','European Organisation for Research and Treatment of Cancer - EORTC']:
+    df[column_dict[i]] = average[column_dict[i]]
 
 official = st.selectbox(
 	'Lead Official', ['Other']+
@@ -229,6 +264,15 @@ official = st.selectbox(
        'Pfizer ']) )
 if official != 'Other':
 	df[column_dict[official]] = 1
+if official == 'Other':
+  for i in ['M.D. Anderson Cancer Center ',
+       'Memorial Sloan Kettering Cancer Center ',
+       'Mayo Clinic ', 'Hoffmann-La Roche ',
+       'Novartis Pharmaceuticals ', 'Eli Lilly and Company ',
+       'Dana-Farber Cancer Institute ',
+       'National Cancer Institute (NCI) ', 'Amgen ',
+       'Pfizer ']:
+    df[column_dict[i]] = average[column_dict[i]]
 
 num_collabs = st.slider('Number Collaborators', 0, 10, 10)
 df[155] = num_collabs
@@ -273,14 +317,25 @@ df[166] = num_locations
 
 df_for_lr = scaler.transform(df.reshape(1, -1))
 
-pred = lr.predict_proba(df_for_lr)[:,1]
+pred = lr.predict_proba(df_for_lr)[:,1][0]
+
+#def get_PPV_corrected_pred(pred,thresholds,PPVs):
+#  for i, v in enumerate(thresholds):
+#    if pred > v:
+#      corrected_pred = PPVs[i]
+#      return corrected_pred
+#      break
+
+#corrected_pred = get_PPV_corrected_pred(pred,thresholds,PPVs)
 
 st.sidebar.write('''# Probability of early trial termination
 ''')
 
-st.sidebar.write('{:.2f} percent'.format(pred[0]*0.26*100))
+st.sidebar.write('{:.2f} percent'.format(pred*100))
 
-graph_it(pred[0]*0.26*100)
+graph_it(pred*100)
+
+
 
 
 
