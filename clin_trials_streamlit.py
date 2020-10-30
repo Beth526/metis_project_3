@@ -1,3 +1,6 @@
+#This is an streamlit app that can be run by downloading Streamlit and
+#typing streamlit run clin_trials.py in the terminal
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,28 +8,41 @@ import pickle
 import os
 os.chdir('/Users/beth/Documents/Metis/metis_project_3/metis_project_3')
 
+#import dictionary mapping features to columns indices of the input data
 with open('column_dict.pickle', 'rb') as read_file:
     column_dict = pickle.load(read_file)
 
+#import the logistic regression model
 with open('logistic_regression.pickle', 'rb') as read_file:
     lr = pickle.load(read_file)
 
+#import the scaling (standardscaler) object 
+#logistic regression was regularized and uses scaled data as input
 with open('scaling.pickle', 'rb') as read_file:
     scaler = pickle.load(read_file)
 
+#import the average vector of average values for each feature
 with open('average.pickle', 'rb') as read_file:
     df = pickle.load(read_file)
 
-with open('PPV_threholds.pickle', 'rb') as read_file:
-    thresholds = pickle.load(read_file)
+#If these are imported and used later, the app can display positive
+#predictive value for a given probability bin, rather than the
+#probability itself
 
-with open('PPV.pickle', 'rb') as read_file:
-    PPVs = pickle.load(read_file)
+#with open('PPV_threholds.pickle', 'rb') as read_file:
+#    thresholds = pickle.load(read_file)
 
+#with open('PPV.pickle', 'rb') as read_file:
+#    PPVs = pickle.load(read_file)
+
+#save a copy the average vector since df will be updated
 average=df.copy()
 
-pred = lr.predict_proba(df.reshape(1, -1))[:,1][0]
+#calculate initial probability prediction for df
+df_for_lr = scaler.transform(df.reshape(1, -1))
+pred = lr.predict_proba(df_for_lr)[:,1][0]
 
+#define graphing function for plot on sidebar
 def graph_it(h):
   fig, ax = plt.subplots(figsize=(3,5))
   ax.bar(1,height=h,color='red')
@@ -38,6 +54,7 @@ def graph_it(h):
   ax.text(x=1.48, y=44, s='Average Study: 45%')
   st.sidebar.pyplot(fig)
 
+#First section on app info
 st.write('''# Cancer Clinical Trial Feasibility App
 ''')
 
@@ -51,12 +68,17 @@ Using a model developed from over 18,000 interventional cancer clinical trials p
 It also allows users to explore how different factors affect trial feasibility.
 ''')
 
+#Second section on basic study design features
 st.write('''# Basic Study Design
 ''')
 
+#drop down menus
 purpose = st.selectbox(
     'Primary study purpose', ['Other']+
      sorted(['Treatment','Prevention','Supportive Care','Diagnostic']) )
+#below each drop down or button there is text like this to make it so that if the user 
+#switched back to 'Other' then the average value would be used again. For anything else
+#the cooresponding column in the input vector would be switched to 1
 if purpose != 'Other':
 	df[column_dict[purpose]] = 1
 if purpose == 'Other':
@@ -81,6 +103,7 @@ if option == 'Other':
   for i in ['Single Group','Parallel','Crossover','Sequential','Factorial']:
     df[column_dict[i]] = average[column_dict[i]]
 
+#checkboxes in left and right columns
 left_column, right_column = st.beta_columns(2)
 
 random = left_column.checkbox('Randomized', value=False)
@@ -108,7 +131,7 @@ if blinded == 'Other':
       'Participant','Participant|Investigator|Outcomes Assessor']:
     df[column_dict[i]] = average[column_dict[i]]
 
-
+#a multiselect box for condition
 condition_tags = sorted(['stage ii', 'stage iii', 'iv', 'breast', 'lymphoma', 'non-hodgkin', 'noncontiguous', 'prostate', \
         'lung', 'myeloma', 'leukemia', 'stomach', 'liver', 'colorectal', 'cervical', 'pancreatic', \
         'renal', 'melanoma', 'non small/large cell', 'small cell', 'squamous', 'diffuse', 'childhood', 'recurrent', \
@@ -120,9 +143,11 @@ condition = st.multiselect(
 for i in condition:
 	df[column_dict[i]] = 1
 
+#Intervention and study arms section
 st.write('''# Intervention and Study Arms
 ''')
 
+#select boxes
 arms = st.selectbox(
 	'Study Arms Design', ['Other']+
 	sorted(['Experimental|Active Comparator', 'Experimental',
@@ -140,10 +165,11 @@ if arms == 'Other':
        'Experimental|No Intervention', 'Active Comparator|Placebo Comparator']:
     df[column_dict[i]] = average[column_dict[i]]
 
-
+#slider
 num_arms = st.slider('Number of Arms (10 if more than 10)', 1, 10, 1 )
 df[78] = num_arms
 
+#checkboxes in left and right columns
 left_column, right_column = st.beta_columns(2)
 
 FDAreg_drug = left_column.checkbox('Studies an FDA-regulated Drug', value=False)
@@ -164,6 +190,7 @@ if access == False:
 if access == True:
 	df[32] = 1
 
+#intervention multiselect
 intervention_tags = ['biomarker', 'stem cell', 'cell transplantation', 'chemotherapy', \
             'radiation', 'placebo', 'surgery', 'docetaxel', 'bevacizumab', 'doxorubicin', \
              'paclitaxel', 'rituximab', 'cetuximab', 'daily', 'weekly', 'monthly', 'iv/intravenous', 'oral', \
@@ -174,10 +201,11 @@ intervention = st.multiselect(
 for i in intervention:
 	df[column_dict[i]] = 1
 
-
+#Outcomes Assessment section
 st.write('''# Outcomes Assessment
 ''')
 
+#outcomes multiselect
 outcome_tags =['progression free', 'correlative studies', 'event free','disease free', 'relapse', 'failure free','toxcitiy and tolerability',\
          'overall survival','percent change','overall response rate','RECIST','complete response', 'remission','quality of life']
 
@@ -186,7 +214,7 @@ outcome = st.multiselect(
 for i in outcome:
 	df[column_dict[i]] = 1
 
-
+#sliders
 longest_outcome_measurement = st.slider('Longest outcome measuement (weeks)', 1, 52*10, 52)
 df[46] = longest_outcome_measurement * 7
 
@@ -199,6 +227,7 @@ df[48] = number_primary_outcomes
 number_secondary_outcomes = st.slider('Number Secondary Outcomes', 0, 10, 1)
 df[49] = number_secondary_outcomes
 
+#Eligibility section
 st.write('''# Eligibility
 ''')
 
@@ -207,6 +236,7 @@ gender = st.selectbox(
      sorted(['Female','Male','All']) )
 df[column_dict[gender]] = 1
 
+#Eligibility tags multiselect
 eligibility_tags =['biopsy confirmed', 'ECOG', 'who performance scale', 'resectable', 'vitamin levels', \
  'blood pressure', 'life expectancy', 'MRI', 'CAT', 'PET', 'imaging' \
  'hemoglobin','glucose', 'diabetes', 'liver function', 'renal function',\
@@ -219,6 +249,7 @@ eligibility = st.multiselect(
 for i in eligibility:
 	df[column_dict[i]] = 1
 
+#sliders
 number_inclusion_criteria = st.slider('Number Inclusion Criteria', 1, 10, 10)
 df[114] = number_inclusion_criteria
 
@@ -231,7 +262,7 @@ df[113] = min_age * 365
 max_age = st.slider('Max Age (years)', 0, 100, 100)
 df[112] = max_age * 365
 
-
+#Sponsors and investigators section
 st.write('''# Sponsor and Investigators
 ''')
 
@@ -277,6 +308,7 @@ if official == 'Other':
 num_collabs = st.slider('Number Collaborators', 0, 10, 10)
 df[155] = num_collabs
 
+#Study locations section
 st.write('''# Study Locations
 ''')
 
@@ -315,8 +347,10 @@ df[167] = num_countries
 num_locations = st.slider('Number Sites', 0, 100, 1)
 df[166] = num_locations
 
+#Scale the final df vector using the standard scaler object
 df_for_lr = scaler.transform(df.reshape(1, -1))
 
+#Make a prediction with the logistic regression model
 pred = lr.predict_proba(df_for_lr)[:,1][0]
 
 #def get_PPV_corrected_pred(pred,thresholds,PPVs):
@@ -328,6 +362,7 @@ pred = lr.predict_proba(df_for_lr)[:,1][0]
 
 #corrected_pred = get_PPV_corrected_pred(pred,thresholds,PPVs)
 
+#Create the sidebar with a title, text probability and graph
 st.sidebar.write('''# Probability of early trial termination
 ''')
 
