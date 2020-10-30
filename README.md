@@ -17,7 +17,7 @@ I one hot encoded the categorial data fields and engineered several new features
 - **imblearn**
 - **xgboost**
 
-Models tested:
+**Models tested:**
 
 - kNN
 - Logistic Regression
@@ -27,7 +27,7 @@ Models tested:
 - XGBoost
 - Ensembled models
 
-I used standardscaler to normalize the data and kNN imputation to impute values for some features with missing values. Only about 1/3 of the trials in the dataset were 'Terminated' causing a class imbalance, so I used either ADASYN oversampling or balanced model class weights when available. Models were optimized with gridsearch and most models reached similar F1 scores and AUCs for calling the "Terminated" class of ~0.4 and ~0.65, respectively. I acheived mild class seperation and a recall of 60-70% for "Terminated" trials. Ensembling only improved the scores of kNN and Logistic Regression.
+I used standardscaler to normalize the data and kNN imputation to impute values for some features with missing values. Only about 1/3 of the trials in the dataset were 'Terminated' causing a class imbalance, so I used either ADASYN oversampling or balanced model class weights when available. Models were optimized with gridsearch and most models reached similar F1 scores and AUCs for calling the "Terminated" class of ~0.4 and ~0.65, respectively. I acheived mild class seperation and a recall of 60-70% for "Terminated" trials. Ensembling only improved scores for a combination of kNN and Logistic Regression. Overall XGBoost performed the best.
 
 [**Model Optimization Notebook**](https://github.com/Beth526/metis_project_3/blob/main/Project3_model_optimization.ipynb)
 
