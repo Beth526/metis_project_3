@@ -36,5 +36,8 @@ I used standardscaler to normalize the data and kNN imputation to impute values 
 I made a Streamlit app to allow users to interact directly with the logistic regression model and see how almost all the features affect the predictions for trial termination.
 
 [**App screenshot**](https://github.com/Beth526/metis_project_3/blob/main/streamlit%20app%20screen%20shot.png)
-[**App**](https://github.com/Beth526/metis_project_3/blob/main/clin_trials_streamlit.py)
+
+[**Streamlit App**](https://github.com/Beth526/metis_project_3/blob/main/clin_trials_streamlit.py)
+
+[**Presentation**](https://github.com/Beth526/metis_project_3/blob/main/Project%203%20presentation.pdf)
 
