@@ -13,27 +13,19 @@ I one hot encoded the categorial data fields and engineered several new features
 
 Model optimization was performed using:
 
--scikit-learn
-
--imblearn
-
--xgboost
+- scikit-learn
+- imblearn
+- xgboost
 
 Models tested:
 
--kNN
-
--Logistic Regression
-
--SVC
-
--Naive Bayes
-
--Random Forest
-
--XGBoost
-
--Ensembled models
+- kNN
+- Logistic Regression
+- SVC
+- Naive Bayes
+- Random Forest
+- XGBoost
+- Ensembled models
 
 I used standardscaler to normalize the data and kNN imputation to impute values for some features with missing values. Only about 1/3 of the trials in the dataset were 'Terminated' causing a class imbalance, so I used either ADASYN oversampling or balanced model class weights when available. Models were optimized with gridsearch and most models reached similar F1 scores and AUCs for calling the "Terminated" class of ~0.4 and ~0.65, respectively. I acheived mild class seperation and a recall of 60-70% for "Terminated" trials but recall could not be improved further without the optimal models calling all cases "Terminated". Ensembling only improved the scores of kNN and Logistic Regression.
 
