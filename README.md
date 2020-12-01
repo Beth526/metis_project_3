@@ -39,7 +39,7 @@ I made a **Streamlit** app to allow users to interact directly with the logistic
 
 [**App deployed using Heroku**](https://ghostly-spell-76559.herokuapp.com)
 
-[**App screenshot**](https://github.com/Beth526/metis_project_3/blob/main/streamlit%20app%20screen%20shot.png)
+![**App screenshot**](https://github.com/Beth526/metis_project_3/blob/main/streamlit%20app%20screen%20shot.png)
 
 [**Streamlit App Code**](https://github.com/Beth526/metis_project_3/blob/main/clin_trials_streamlit.py)
 
